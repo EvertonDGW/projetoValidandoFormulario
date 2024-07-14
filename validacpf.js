@@ -1,107 +1,103 @@
-class ValidaFormulario {
-    constructor() {
-        this.formulario = document.querySelector('.formulario');
-        this.evento();
-    }
+class ValidaCPF {
+    constructor(cpfEnviado) {
 
-    evento() {
-        this.formulario.addEventListener('submit', e => {
-            this.handleSubmit(e);
+        //estamos definindo uma nova propriedade chama cpfLimpo para a nossa instancia
+        //lembre-se this re refere a nossa instancia
+
+        Object.defineProperty(this, 'cpfLimpo', {
+            writable: false, //a propriedade não pode ser modiicada
+            enumerable: true,   // Vai aparecer quando listar as propriedades
+            configurable: false,    //a propriedade não pode ser reconfigurada ou deletada do objeto.
+
+            // metodo replace foi usado para substituir tudo o que não for numero por uma string vazia
+            // \D+ sinifica qualquer valor não numerico, ou seja, esta pegando tudo que não for numero
+            // /g sinifica global, ou seja, vai substituir todas as ocorrencias na string, ou seja, no CPFenviado,
+            // ou seja, se o cpf enviado tiver algum caractere diferente de numero então sera substituito por uma string vazia
+            // ou seja, value: cpfEnviado.replace(/\D+/g, '') remove tudo que não for numero como traços etc... e retorna apenas os numeros do cpf
+
+            value: cpfEnviado.replace(/\D+/g, '')
+
         });
     }
 
-    handleSubmit(e) {
-        e.preventDefault();
-        const camposValidos = this.camposSaoValidos();
-        const senhasValidas = this.senhasSaoValidas();
+    éSequência() {
+        //o comando this.cpfLimpo.charAt(0).repeat(11) esta repetindo o primeiro elemento do this.cpfLimpo que esta no indice 0 e repetindo 11 vezes
+        //em seguida e feita um comparação com o cpf original
+        //ou seja, sethis.cpfLimpo for, por exemplo, "11122233344", então this.cpfLimpo.charAt(0) seria "1", e .repeat(11) resultaria em "11111111111"
+        //Se this.cpfLimpo não for uma sequência de dígitos repetidos, a função retorna false, caso contrario true
 
-        if (camposValidos && senhasValidas) {
-            alert('Formulário enviado');
-            this.formulario.submit();
-        }
+        return this.cpfLimpo.charAt(0).repeat(11) === this.cpfLimpo;
     }
 
-    senhasSaoValidas() {
-        let valid = true;
-
-        const senha = this.formulario.querySelector('.senha');
-        const repetirSenha = this.formulario.querySelector('.repetir-senha');
-
-        if (senha.value !== repetirSenha.value) {
-            valid = false;
-            this.criaErro(senha, 'Campo senha e repetir senha precisam ser iguais');
-            this.criaErro(repetirSenha, 'Campo senha e repetir senha precisam ser iguais');
-        }
-
-        if (senha.value.length < 6 || senha.value.length > 12) {
-            valid = false;
-            this.criaErro(senha, 'A senha precisa ter entre 6 a 12 caracteres');
-        }
-
-        return valid;
+    geraNovoCpf() {
+        //slice retorna o primeiro digito que esta no indice(0) do cpf ate o antepenultimo digito que esta no indice (-2) do cpf. exemplo:
+        //se this.cpfLimpo for "12345678900", então this.cpfLimpo.slice(0, -2) resultaria em "123456789".
+        const cpfSemDigitos = this.cpfLimpo.slice(0, -2);
+        const digito1 = ValidaCPF.geraDigito(cpfSemDigitos);
+        const digito2 = ValidaCPF.geraDigito(cpfSemDigitos + digito1);
+        //this.novoCPF é um propriedade que acabmos de criar dentro do metodo geraNovoCpf para a instancia/objeto da class
+        this.novoCPF = cpfSemDigitos + digito1 + digito2; 
     }
 
-    camposSaoValidos() {
-        let valid = true;
+    //usamos estatic porque queremos que o metodo geraDigito() seja referente a nossa class e não a sua instancia/objeto
+    //ou seja, o metodo pode ser chamado diretamente pela class se precisar de uma instancia
+    static geraDigito(cpfSemDigitos) {
 
-        for (let errorText of this.formulario.querySelectorAll('.error-text')) {
-            errorText.remove();
+        let total = 0;// essa variavel vai acumular o resultado de cada iteração do loop for
+
+        //com base na quantidade de caractesres do cpfsemdigitos vamos calcular +1, ou seja,
+        //se o cpfSemDigitos for 045663052 e somamos com +1 resulta no numero 10, porque o cpfSemDigitos tem 9 caracteres quando somado com +1 fica igual a 10
+        //o cpfSemDigitos permanece inalterado, resultando em:
+        //cpfSemDigitos = 045663052. pelo fato de usarmos cpfSemDigitos.length, o cpfSemDigitos é retornado em formato de STRING
+        //reverso = 10
+
+        //reverso é uma variavel que vai controlar a quantidade de iterações,ou seja, vai ocorrer 10 iterações no total
+        let reverso = cpfSemDigitos.length + 1;
+
+        //lembre-se quando qualquer estrutura de repetição/loop for usado,
+        //sempre ocorre iteração, ou seja, a varivael percorrer cada elemento individualmente da variavel
+
+
+        /*
+
+        imagine que cpfSemdigitos é 045663052, logo o resultado do for é:
+
+        Iteração 1:
+        stringNumerica = '0'            ---> primeiro caractere do cpfSemDigitos em formato de string
+        Number(stringNumerica) = 0      ---> convertendo o caractere para Number
+        total += 10 * 0 -> total permanece 0
+        reverso-- -> reverso agora é 9 
+
+        em seguida:
+
+        Iteração 2:
+        stringNumerica = '4'
+        Number(stringNumerica) = 4
+        total += 9 * 4 -> total = 0 + 36 = 36
+        reverso-- -> reverso agora é 8
+
+        apos todas as iterações, o valor da variavel acumuladora seria igual a total = 188, com base no cpf usado de exemplo
+        */
+
+        for (let stringNumerica of cpfSemDigitos) {
+            total += reverso * Number(stringNumerica); //usamos Number() para converte o cfpSemDigito de String para Number
+
+            reverso--;  //quando usamos reverso--, significa que a cada iteração do loop for a variavel reverso vai diminuir uma unidade
         }
 
-        for (let campo of this.formulario.querySelectorAll('.validar')) {
-            const label = campo.previousElementSibling.innerText;
-
-            if (!campo.value) {
-                this.criaErro(campo, `${label} não pode estar em branco`);
-                valid = false;
-            }
-
-            if (campo.classList.contains('cpf')) {
-                if (!this.validaCPF(campo)) valid = false;
-            }
-
-            if (campo.classList.contains('usuario')) {
-                if (!this.validaUsuario(campo)) valid = false;
-            }
-        }
-
-        return valid;
+        // o operador % calcula o resto da visão, ou seja, total = 188 % 11 = resto 1
+        const digito = 11 - (total % 11);// o numero 11 foi escolhido porque queremos um numero entre 1 e 10
+        return digito <= 9 ? String(digito) : '0';  //digito é convertido para string (String(digito)) se estiver entre 1 e 9, ou retorna '0' se for 10.
     }
 
-    validaUsuario(campo) {
-        const usuario = campo.value;
-        let valid = true;
+    valida() {
+        if (!this.cpfLimpo) return false;
+        if (typeof this.cpfLimpo !== 'string') return false;
+        if (this.cpfLimpo.length !== 11) return false;
+        if (this.éSequência()) return false;
+        this.geraNovoCpf();
 
-        if (usuario.length < 6 || usuario.length > 12) {
-            this.criaErro(campo, 'Usuário precisa ter entre 6 e 12 caracteres.');
-            valid = false;
-        }
-
-        if (!usuario.match(/^[a-zA-Z0-9]+$/g)) {
-            this.criaErro(campo, 'Nome de usuário precisa conter apenas letras e/ou números.');
-            valid = false;
-        }
-
-        return valid;
+        return this.novoCPF === this.cpfLimpo;
     }
-
-    validaCPF(campo) {
-        const cpf = new ValidaCPF(campo.value);
-        if (!cpf.valida()) {
-            this.criaErro(campo, 'CPF inválido.');
-            return false;
-        }
-
-        return true;
-    }
-
-    criaErro(campo, msg) {
-        const div = document.createElement('div');
-        div.innerHTML = msg;
-        div.classList.add('error-text');
-        campo.insertAdjacentElement('afterend', div);
-    }
-
 }
 
-let valida = new ValidaFormulario();
