@@ -10,7 +10,7 @@ class ValidaFormulario {
         });
     }
 
-    handleSubmit(e) {
+    handleSubmit() {
         e.preventDefault();
         const camposValidos = this.camposSaoValidos();
         const senhasValidas = this.senhasSaoValidas();
