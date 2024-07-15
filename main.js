@@ -10,7 +10,7 @@ class ValidaFormulario {
         });
     }
 
-    handleSubmit() {
+    handleSubmit(e) {
         e.preventDefault();
         const camposValidos = this.camposSaoValidos();
         const senhasValidas = this.senhasSaoValidas();
@@ -24,8 +24,8 @@ class ValidaFormulario {
     senhasSaoValidas() {
         let valid = true;
 
-        const senha = this.formulario.querySelector('.senha'); // Corrigido para .senha
-        const repetirSenha = this.formulario.querySelector('.repetir-senha'); // Corrigido para .repetir-senha
+        const senha = this.formulario.querySelector('.senha');
+        const repetirSenha = this.formulario.querySelector('.repetir-senha');
 
         if (senha.value !== repetirSenha.value) {
             valid = false;
